@@ -1,9 +1,7 @@
-from fastapi import FastAPI, HTTPException,APIRouter
+from fastapi import  HTTPException,APIRouter
 from pydantic import BaseModel, Field
-from database import products_collection,carts_collection,
+from database import products_collection,carts_collection
 from bson import ObjectId, utc
-
-app=FastAPI()
 
 router =APIRouter()
 
@@ -13,7 +11,6 @@ class CartItemUpdate(BaseModel):
 class CartItemCreate(BaseModel):
     product_id:str
     quantity:int =Field(default=0,ge=0)
-
 
 # get cart
 def cart_response(cart):
