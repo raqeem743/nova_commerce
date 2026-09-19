@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException,Request
+from fastapi import FastAPI, HTTPException,Request,APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional
 from database import products_collection
 from bson import ObjectId, utc
 
 app =FastAPI()
+
+router =APIRouter()
 
 class ProductCreate(BaseModel):
     name: str
@@ -41,7 +43,7 @@ def product_response(product):
 # Create product
 # --------------------------------------------------
 
-@app.post("/products")
+@router.post("/products")
 def create_product(product: ProductCreate):
 
     product_data = product.model_dump()
@@ -59,7 +61,7 @@ def create_product(product: ProductCreate):
 # Get all products
 # --------------------------------------------------
 
-@app.get("/products")
+@router.get("/products")
 def get_products():
     products = products_collection.find()
 
@@ -72,7 +74,7 @@ def get_products():
 # Get single product
 # --------------------------------------------------
 
-@app.get("/products/{product_id}")
+@router.get("/products/{product_id}")
 def get_product(product_id: str):
 
     try:
@@ -100,7 +102,7 @@ def get_product(product_id: str):
 # Update product
 # --------------------------------------------------
 
-@app.put("/products/{product_id}")
+@router.put("/products/{product_id}")
 def update_product(
     product_id: str,
     product: ProductUpdate
@@ -148,7 +150,7 @@ def update_product(
 # Delete product
 # --------------------------------------------------
 
-@app.delete("/products/{product_id}")
+@router.delete("/products/{product_id}")
 def delete_product(product_id: str):
 
     try:
