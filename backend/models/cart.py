@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException,APIRouter
 from pydantic import BaseModel, Field
-from database import products_collection,carts_collection,orders_collection
+from database import products_collection,carts_collection,
 from bson import ObjectId, utc
 
 app=FastAPI()
