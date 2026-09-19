@@ -1,10 +1,9 @@
-from fastapi import FastAPI, HTTPException,APIRouter
+from fastapi import HTTPException,APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional
 from database import products_collection
 from bson import ObjectId, utc
 
-app =FastAPI()
 
 router =APIRouter()
 
