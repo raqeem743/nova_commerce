@@ -6,8 +6,10 @@ from fastapi import FastAPI, HTTPException,Request
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId, utc
 
+from models.products import ProductCreate, ProductUpdate
 from database import products_collection,carts_collection,orders_collection,payment_attempts_collection,conversations_collection,conversation_messages_collection
-from models.product import ProductCreate, ProductUpdate, CartItemUpdate, CartItemCreate,CheckoutRequest,OrderCreate,PaymentCreate,OrderStatusUpdate,WhatsAppMessage
+from models.basemodels import  CartItemUpdate, CartItemCreate,CheckoutRequest,OrderCreate,PaymentCreate,OrderStatusUpdate,WhatsAppMessage
+from models.products import router as products_router
 
 from dotenv import load_dotenv
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -25,165 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --------------------------------------------------
-# Helper
-# --------------------------------------------------
-
-def product_response(product):
-    return {
-        "id": str(product["_id"]),
-        "name": product["name"],
-        "description": product["description"],
-        "price": product["price"],
-        "category": product["category"],
-        "image": product["image"],
-        "stock": product["stock"],
-        "featured": product["featured"]
-    }
-
+app.include_router(products_router)
 
 @app.get("/")
 def home():
     return {
         "message": "NOVA Commerce API is running"
-    }
-
-
-# --------------------------------------------------
-# Get all products
-# --------------------------------------------------
-
-@app.get("/products")
-def get_products():
-    products = products_collection.find()
-
-    return [
-        product_response(product)
-        for product in products
-    ]
-
-
-# --------------------------------------------------
-# Get single product
-# --------------------------------------------------
-
-@app.get("/products/{product_id}")
-def get_product(product_id: str):
-
-    try:
-        object_id = ObjectId(product_id)
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
-
-    product = products_collection.find_one({
-        "_id": object_id
-    })
-
-    if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-
-    return product_response(product)
-
-
-# --------------------------------------------------
-# Create product
-# --------------------------------------------------
-
-@app.post("/products")
-def create_product(product: ProductCreate):
-
-    product_data = product.model_dump()
-
-    result = products_collection.insert_one(product_data)
-
-    created_product = products_collection.find_one({
-        "_id": result.inserted_id
-    })
-
-    return product_response(created_product)
-
-
-# --------------------------------------------------
-# Update product
-# --------------------------------------------------
-
-@app.put("/products/{product_id}")
-def update_product(
-    product_id: str,
-    product: ProductUpdate
-):
-
-    try:
-        object_id = ObjectId(product_id)
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
-
-    update_data = {
-        key: value
-        for key, value in product.model_dump().items()
-        if value is not None
-    }
-
-    if not update_data:
-        raise HTTPException(
-            status_code=400,
-            detail="No fields to update"
-        )
-
-    result = products_collection.update_one(
-        {"_id": object_id},
-        {"$set": update_data}
-    )
-
-    if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-
-    updated_product = products_collection.find_one({
-        "_id": object_id
-    })
-
-    return product_response(updated_product)
-
-
-# --------------------------------------------------
-# Delete product
-# --------------------------------------------------
-
-@app.delete("/products/{product_id}")
-def delete_product(product_id: str):
-
-    try:
-        object_id = ObjectId(product_id)
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
-
-    result = products_collection.delete_one({
-        "_id": object_id
-    })
-
-    if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-
-    return {
-        "message": "Product deleted successfully"
     }
 
 # get cart

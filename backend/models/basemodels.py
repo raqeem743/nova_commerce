@@ -1,26 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
 from typing import Literal
 
-
-class ProductCreate(BaseModel):
-    name: str
-    description: str
-    price: float = Field(gt=0)
-    category: str
-    image: str
-    stock: int = Field(default=0, ge=0)
-    featured: bool = False
-
-
-class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[float] = Field(default=None, gt=0)
-    category: Optional[str] = None
-    image: Optional[str] = None
-    stock: Optional[int] = Field(default=None, ge=0)
-    featured: Optional[bool] = None
 
 class CartItemUpdate(BaseModel):
     quantity:int =Field(ge=0)
