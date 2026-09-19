@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException,Request,APIRouter
+from fastapi import FastAPI, HTTPException,APIRouter
 from pydantic import BaseModel, Field
 from typing import Optional
 from database import products_collection
@@ -42,7 +42,6 @@ def product_response(product):
 # --------------------------------------------------
 # Create product
 # --------------------------------------------------
-
 @router.post("/products")
 def create_product(product: ProductCreate):
 
