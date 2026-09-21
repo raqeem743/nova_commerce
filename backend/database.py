@@ -3,16 +3,13 @@ import os
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
-
 load_dotenv()
 
 MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "nova_commerce")
 
-
 if not MONGO_URI:
     raise ValueError("MONGO_URI is not set in the .env file")
-
 
 client = MongoClient(MONGO_URI)
 

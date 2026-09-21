@@ -1,7 +1,7 @@
 from fastapi import  HTTPException,APIRouter
 from pydantic import BaseModel, Field
 from database import products_collection,carts_collection
-from bson import ObjectId, utc
+from bson import ObjectId
 
 router =APIRouter()
 

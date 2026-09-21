@@ -1,0 +1,12 @@
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:8.0-ubi8
+    ports:
+       - "27018:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=nova
+      - MONGO_INITDB_ROOT_PASSWORD=nova1234
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data/db

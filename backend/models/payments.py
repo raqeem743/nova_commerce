@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import  HTTPException,APIRouter,Request
 from pydantic import BaseModel
 from database import orders_collection,payment_attempts_collection
-from bson import ObjectId, utc
+from bson import ObjectId
 import stripe
 import os
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter,HTTPException
 from pydantic import BaseModel, EmailStr
-from database import 
-from bson import ObjectId, utc
+from database import products_collection,carts_collection
+from bson import ObjectId
 
 router =APIRouter()
 

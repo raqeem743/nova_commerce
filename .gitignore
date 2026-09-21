@@ -1,3 +1,5 @@
 venv/
 .vscode/
 frontend/node_modules/
+
+data/
