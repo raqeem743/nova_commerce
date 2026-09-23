@@ -1,22 +1,37 @@
+from typing import Optional
 from fastapi import APIRouter,HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from routers.cart import PyObjectId
 from database import products_collection,carts_collection
 from bson import ObjectId
 
-router =APIRouter()
+router =APIRouter(
+    prefix="/checkout",
+    responses={404: {"description": "Not found"}},
+)
 
 class CheckoutRequest(BaseModel):
-    customer_id: str
-    name: str
-    email: EmailStr
-    phone: str
-    address: str
-    city: str
-    postcode: str
+    # customer_id: str
+    # name: str
+    # email: EmailStr
+    # phone: str
+    # address: str
+    # city: str
+    # postcode: str
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    name: str = Field()
+    email:EmailStr=Field()
+    phone:str=Field()
+    address:str =Field()
+    city:str =Field()
+    postcode:str =Field()
+    model_config = ConfigDict(
+            populate_by_name=True,
+            arbitrary_types_allowed=True,
+        )
 
 # valid postcode for now
 def validate_postcode(postcode: str) -> bool:
-
     allowed_postcodes = [
         "54000",
         "54010",

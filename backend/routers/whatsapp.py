@@ -1,4 +1,5 @@
-from fastapi import APIRouter,Request
+import os
+from fastapi import APIRouter, HTTPException,Request
 from pydantic import BaseModel
 from database import conversations_collection,conversation_messages_collection
 from datetime import datetime
@@ -9,6 +10,28 @@ class WhatsAppMessage(BaseModel):
     customer_phone: str
     message: str
     message_id: str | None = None
+
+
+# get whatsapp messages
+@router.get("/webhooks/whatsapp")
+async def verify_whatsapp_webhook(request: Request):
+
+    params = request.query_params
+
+    mode = params.get("hub.mode")
+    verify_token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    expected_token = os.getenv("WHATSAPP_VERIFY_TOKEN")
+
+    if mode == "subscribe" and verify_token == expected_token:
+        return int(challenge)
+
+    raise HTTPException(
+        status_code=403,
+        detail="Webhook verification failed"
+    )
+
 
 # whatsapp webhook
 @router.post("/webhooks/whatsapp")

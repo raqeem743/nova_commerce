@@ -4,12 +4,15 @@ from bson import ObjectId
 import os
 
 router=APIRouter(
-    # prefix="/get_admin_stats",
-    # tags=["Get_admin_stats"]
+    prefix="/admin",
+    responses={404: {"description": "Not found"}},
 )
 
 # admin stats panel
-@router.get("/")
+@router.get(path="/stats",
+    summary="get admin stats",
+    description="Admin can get all the stats",
+    )
 def get_admin_stats():
 
     total_orders = orders_collection.count_documents({})
@@ -76,7 +79,11 @@ def get_admin_stats():
     }
 
 # admin get all orders
-@router.get("/admin/orders")
+@router.get(path="/orders",
+    summary="Get admin order",
+    description="Admin can get all the orders.",
+    )
+
 def get_admin_orders(
     status: str | None = None
 ):
@@ -117,7 +124,10 @@ def get_admin_orders(
     }
 
 # admin get order by order_id
-@router.get("/admin/orders/{order_id}")
+@router.get(path="/order/{order_id}",
+    summary="Get order by id",
+    description="Admin can get order by id"
+    )
 def get_admin_order(order_id: str):
 
     try:
@@ -151,7 +161,10 @@ def get_admin_order(order_id: str):
     }
 
 # admin get low stock product
-@router.get("/admin/products/low-stock")
+@router.get(path="/low stock",
+    summary="Get admin low stock product",
+    description="Admin can get low stock products")
+
 def get_low_stock_products():
 
     products = list(
@@ -183,22 +196,3 @@ def get_low_stock_products():
         "count": len(result)
     }
 
-# get whatsapp messages
-@router.get("/webhooks/whatsapp")
-async def verify_whatsapp_webhook(request: Request):
-
-    params = request.query_params
-
-    mode = params.get("hub.mode")
-    verify_token = params.get("hub.verify_token")
-    challenge = params.get("hub.challenge")
-
-    expected_token = os.getenv("WHATSAPP_VERIFY_TOKEN")
-
-    if mode == "subscribe" and verify_token == expected_token:
-        return int(challenge)
-
-    raise HTTPException(
-        status_code=403,
-        detail="Webhook verification failed"
-    )

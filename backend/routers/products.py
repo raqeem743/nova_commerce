@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import HTTPException, APIRouter
 from pydantic import BaseModel, Field, BeforeValidator, ConfigDict
 from typing import Optional, List, Annotated
 from database import products_collection
@@ -12,10 +12,10 @@ router = APIRouter(
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class Product(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    product_id: Optional[PyObjectId] = Field(alias="_id", default=None)
     name: str = Field()
-    descritpion: str = Field()
-    price: str = Field()
+    description: Optional[str] = Field(default=None)  # Fixed default
+    price: float = Field()
     category: str = Field()
     image: str = Field()
     stock: int = Field(default=0)
@@ -30,8 +30,8 @@ class ProductCollection(BaseModel):
 
 class ProductCreate(BaseModel):
     name: str = Field()
-    descritpion: str = Field()
-    price: str = Field()
+    description: Optional[str] = Field(default=None)  # Fixed typo & added default
+    price: float = Field()
     category: str = Field()
     image: str = Field()
     stock: int = Field(default=0)
@@ -43,8 +43,8 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = Field(default=None)
-    descritpion: Optional[str] = Field(default=None)
-    price: Optional[str] = Field(default=None)
+    description: Optional[str] = Field(default=None)  # Fixed typo & added default
+    price: Optional[float] = Field(default=None)
     category: Optional[str] = Field(default=None)
     image: Optional[str] = Field(default=None)
     stock: Optional[int] = Field(default=None)
@@ -66,7 +66,6 @@ def create_product(product: ProductCreate):
     new_product = products_collection.find_one({
         "_id": result.inserted_id
     })
-
     return new_product
 
 @router.get(
@@ -76,7 +75,8 @@ def create_product(product: ProductCreate):
     response_model=ProductCollection
 )
 def get_products():
-    return ProductCollection(products=products_collection.find({}))
+    # Wrap database cursor in list
+    return ProductCollection(products=list(products_collection.find({})))
 
 @router.get(
     path="/{product_id}",
@@ -87,27 +87,13 @@ def get_products():
 def get_product(product_id: str):
     try:
         object_id = ObjectId(product_id)
-
     except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid product ID")
 
-    product = products_collection.find_one({
-        "_id": object_id
-    })
-
+    product = products_collection.find_one({"_id": object_id})
     if not product:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-
-    # print(product)
-
+        raise HTTPException(status_code=404, detail="Product not found")
     return product
-
 
 @router.put(
     path="/{product_id}",
@@ -115,17 +101,11 @@ def get_product(product_id: str):
     description="Update one or more fields of an existing product.",
     response_model=Product
 )
-def update_product(
-    product_id: str,
-    product: ProductUpdate
-):
+def update_product(product_id: str, product: ProductUpdate):
     try:
         object_id = ObjectId(product_id)
     except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid product ID")
 
     update_data = {
         key: value
@@ -134,10 +114,7 @@ def update_product(
     }
 
     if not update_data:
-        raise HTTPException(
-            status_code=400,
-            detail="No fields to update"
-        )
+        raise HTTPException(status_code=400, detail="No fields to update")
 
     result = products_collection.update_one(
         {"_id": object_id},
@@ -145,15 +122,9 @@ def update_product(
     )
 
     if result.matched_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
+        raise HTTPException(status_code=404, detail="Product not found")
 
-    updated_product = products_collection.find_one({
-        "_id": object_id
-    })
-
+    updated_product = products_collection.find_one({"_id": object_id})
     return updated_product
 
 @router.delete(
@@ -162,24 +133,12 @@ def update_product(
     description="Delete a product using its MongoDB ObjectId."
 )
 def delete_product(product_id: str):
-
     try:
         object_id = ObjectId(product_id)
-
     except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid product ID"
-        )
+        raise HTTPException(status_code=400, detail="Invalid product ID")
 
-    result = products_collection.delete_one({
-        "_id": object_id
-    })
-
+    result = products_collection.delete_one({"_id": object_id})
     if result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
-
+        raise HTTPException(status_code=404, detail="Product not found")
     return True

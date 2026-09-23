@@ -1,27 +1,47 @@
 from datetime import datetime, timezone
 from fastapi import  HTTPException,APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 import random
-from typing import Literal
-from models.checkout import calculate_delivery_fee, validate_postcode
+from typing import Literal, Optional
+from routers.cart import PyObjectId
+from routers.checkout import calculate_delivery_fee, validate_postcode
 from database import products_collection,carts_collection,orders_collection
 from bson import ObjectId
 
-router=APIRouter()
+router=APIRouter(
+    prefix="/orders",
+    responses={404: {"description": "Not found"}},
+)
 
 class OrderCreate(BaseModel):
-    customer_id: str
-    name: str
-    email: str
-    phone: str
-    address: str
-    city: str
-    postcode: str
-    payment_method: Literal[
-        "online_card",
-        "cash_on_delivery",
-        "card_on_delivery"
-    ]
+    # customer_id: str
+    # name: str
+    # email: str
+    # phone: str
+    # address: str
+    # city: str
+    # postcode: str
+    # payment_method: Literal[
+    #     "online_card",
+    #     "cash_on_delivery",
+    #     "card_on_delivery"
+    # ]
+        customer_id: Optional[PyObjectId] = Field(alias="_id", default=None)
+        name: str = Field()
+        email:str =Field()
+        phone:str =Field()
+        address:str =Field()
+        city:str =Field()
+        postcode:str =Field()
+        payment_method: Literal[
+                "online_card",
+                "cash_on_delivery",
+                "card_on_delivery"
+            ]
+        model_config = ConfigDict(
+            populate_by_name=True,
+            arbitrary_types_allowed=True,
+        )
 
 class OrderStatusUpdate(BaseModel):
     status: Literal[
@@ -41,7 +61,11 @@ def generate_order_number():
     return f"ORD-{number}"
 
 # Create order
-@router.post("/orders")
+@router.post(path="/",
+    summary="Create a new order",
+    description="Create a new order in mongodb",
+    response_model=OrderCreate
+    )
 def create_order(order: OrderCreate):
 
     # ----------------------------------------
@@ -260,7 +284,11 @@ def create_order(order: OrderCreate):
     }
 
 # get orders
-@router.get("/orders")
+@router.get(path="/",
+    summary="get orders",
+    description="Get all the orders",
+    response_model=OrderCreate)
+
 def get_orders(customer_id: str | None = None):
 
     query = {}
@@ -298,7 +326,13 @@ def get_orders(customer_id: str | None = None):
     }
 
 # get order by id
-@router.get("/orders/{order_id}")
+@router.get(
+    path="/{order_id}",
+    summary="Get order by id",
+    description="get order by id",
+    response_model=OrderCreate
+    )
+
 def get_order(order_id: str):
 
     try:
@@ -332,7 +366,10 @@ def get_order(order_id: str):
     }
 
 # order status
-@router.put("/orders/{order_id}/status")
+@router.put(path="/status/{order_id}",
+    summary="update order status",
+    description="Update order status.",
+    response_model=OrderStatusUpdate)
 def update_order_status(
     order_id: str,
     status_update: OrderStatusUpdate
@@ -392,7 +429,10 @@ def update_order_status(
     }
 
 # order tracking by id
-@router.get("/orders/{order_id}/tracking")
+@router.get(path="/{order_id}/track",
+    summary="Track order",
+    description="Track order by id ",
+    response_model=OrderStatusUpdate)
 def track_order(order_id: str):
 
     try:

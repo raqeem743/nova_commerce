@@ -1,18 +1,27 @@
 from datetime import datetime
+from typing import Optional
 from fastapi import  HTTPException,APIRouter,Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from routers.cart import PyObjectId
 from database import orders_collection,payment_attempts_collection
 from bson import ObjectId
 import stripe
 import os
 
-router=APIRouter()
+router=APIRouter(
+    prefix="/payments",
+    responses={404: {"description": "Not found"}},
+)
 
 class PaymentCreate(BaseModel):
-    order_id: str
+    order_id: Optional[PyObjectId] = Field(alias="_id", default=None)
 
 # payment checkout
-@router.post("/payments/create-checkout")
+@router.post( path="/checkout",
+    summary="Create checkout",
+    description="Create a checkout",
+    response_model=PaymentCreate)
+
 def create_checkout(payment: PaymentCreate):
 
     # Find the order
@@ -110,7 +119,11 @@ def create_checkout(payment: PaymentCreate):
     }
 
 # Stripe webhook
-@router.post("/payments/webhook")
+@router.post(path="/",
+    summary="stripe webhook",
+    description="stripe webhook",
+    response_model=PaymentCreate)
+
 async def stripe_webhook(request: Request):
 
     payload = await request.body()
@@ -213,7 +226,11 @@ async def stripe_webhook(request: Request):
     }
 
 # get payments by id
-@router.get("/payments/{order_id}")
+@router.get(path="/{order_id}",
+    summary="get payment",
+    description="get payment by id",
+    response_model=PaymentCreate)
+
 def get_payment_status(order_id: str):
 
     try:
